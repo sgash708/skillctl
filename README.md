@@ -2,6 +2,8 @@
 
 [日本語](README.ja.md)
 
+> **Status:** best-effort. skillctl parses the output of the `claude` and `codex` CLIs, so an update to either of them can break it. Issues are welcome, but replies and fixes may be slow.
+
 A CLI that imports skills from a GitHub repository into **Claude Code** and **Codex** as plugins, and generates the `marketplace.json` / `plugin.json` files that make such a repository installable.
 
 - `skillctl import` installs skills from a skill repository into Claude Code, Codex, or both, with an interactive picker or from arguments.

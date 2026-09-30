@@ -2,6 +2,8 @@
 
 [English](README.md)
 
+> **ステータス**: best-effort。`claude`・`codex` CLIの出力をパースしているため、どちらかの更新で動かなくなることがある。issueは歓迎するが、対応は遅れる場合がある。
+
 GitHub上のskillリポジトリを **Claude Code** / **Codex** へplugin としてimportするCLI。skillリポジトリ側で必要な`marketplace.json`・`plugin.json`を生成する機能も持つ。
 
 - `skillctl import`: skillリポジトリのskillを、Claude Code・Codex・その両方へimportする。対話ピッカーと引数指定のどちらでも使える
