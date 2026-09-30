@@ -111,7 +111,7 @@ func ensureMarketplaces(ctx context.Context, clients map[string]*pluginclient.Cl
 	active := make(map[string]*pluginclient.Client, len(clients))
 	for target, c := range clients {
 		if err := c.EnsureMarketplace(ctx, marketplaceName, source); err != nil {
-			fmt.Fprintf(stderr, "warning: %sのmarketplace登録に失敗したため、このtargetへのimportをスキップします: %v\n", target, err)
+			fmt.Fprintf(stderr, "warning: failed to register the marketplace for %s; skipping this target: %v\n", target, err)
 			continue
 		}
 		active[target] = c
@@ -159,7 +159,7 @@ func runImportCmd(ctx context.Context, runner pluginclient.Runner, picker ui.Pic
 
 	allClients := availableClients(ctx, runner)
 	if len(allClients) == 0 {
-		return fmt.Errorf("claude/codex どちらのCLIもPATHに見つかりませんでした")
+		return fmt.Errorf("neither the claude nor the codex CLI was found in PATH")
 	}
 
 	var skillIDs []string
@@ -167,7 +167,7 @@ func runImportCmd(ctx context.Context, runner pluginclient.Runner, picker ui.Pic
 	if interactive {
 		plugins, err := catalog.Fetch(ctx, runner, repoOwner, repoName)
 		if err != nil {
-			return fmt.Errorf("skill一覧の取得に失敗しました: %w", err)
+			return fmt.Errorf("failed to fetch the skill list: %w", err)
 		}
 		items := make([]ui.Item, 0, len(plugins))
 		for _, p := range plugins {
@@ -199,7 +199,7 @@ func runImportCmd(ctx context.Context, runner pluginclient.Runner, picker ui.Pic
 
 	for _, r := range results {
 		if !r.OK {
-			return fmt.Errorf("一部のimportに失敗しました")
+			return fmt.Errorf("some imports failed")
 		}
 	}
 	return nil

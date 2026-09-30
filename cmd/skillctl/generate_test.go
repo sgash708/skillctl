@@ -43,6 +43,7 @@ func TestRunGenerate(t *testing.T) {
 		name      string
 		setup     func(*testing.T, string) // prepares root before call
 		check     bool                     // runGenerate(root, check)
+		strict    bool                     // runGenerate(..., strict)
 		wantStale bool                     // expect stale files returned?
 		wantErr   bool                     // expect error?
 		skipRoot  bool                     // skip: os.Geteuid() == 0
@@ -70,7 +71,7 @@ func TestRunGenerate(t *testing.T) {
 			setup: func(t *testing.T, root string) {
 				writeSkillFixture(t, root, "example-skill")
 				// First write the manifests
-				if _, err := runGenerate(root, testMeta, false); err != nil {
+				if _, err := runGenerate(root, testMeta, false, false); err != nil {
 					t.Fatalf("initial write: %v", err)
 				}
 			},
@@ -90,6 +91,7 @@ func TestRunGenerate(t *testing.T) {
 		{
 			name:      "unexpected file in skill directory blocks write mode",
 			check:     false,
+			strict:    true,
 			wantStale: false,
 			wantErr:   true,
 			setup: func(t *testing.T, root string) {
@@ -106,6 +108,7 @@ func TestRunGenerate(t *testing.T) {
 		{
 			name:      "unexpected file in skill directory blocks check mode",
 			check:     true,
+			strict:    true,
 			wantStale: false,
 			wantErr:   true,
 			setup: func(t *testing.T, root string) {
@@ -116,6 +119,23 @@ func TestRunGenerate(t *testing.T) {
 				}
 				if err := os.WriteFile(filepath.Join(hooksDir, "hooks.json"), []byte("{}"), 0o644); err != nil {
 					t.Fatalf("write hooks.json: %v", err)
+				}
+			},
+		},
+		{
+			name:      "extra directories are allowed without strict",
+			check:     false,
+			strict:    false,
+			wantStale: false,
+			wantErr:   false,
+			setup: func(t *testing.T, root string) {
+				writeSkillFixture(t, root, "example-skill")
+				scriptsDir := filepath.Join(root, "example-skill", "scripts")
+				if err := os.MkdirAll(scriptsDir, 0o755); err != nil {
+					t.Fatalf("create scripts dir: %v", err)
+				}
+				if err := os.WriteFile(filepath.Join(scriptsDir, "run.sh"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+					t.Fatalf("write run.sh: %v", err)
 				}
 			},
 		},
@@ -153,7 +173,7 @@ func TestRunGenerate(t *testing.T) {
 				testRoot = filepath.Join(root, "does-not-exist")
 			}
 
-			stale, err := runGenerate(testRoot, testMeta, tt.check)
+			stale, err := runGenerate(testRoot, testMeta, tt.check, tt.strict)
 
 			if tt.wantErr && err == nil {
 				t.Errorf("runGenerate: wanted error, got none")
@@ -216,7 +236,7 @@ func TestNewGenerateCmd(t *testing.T) {
 			setup: func(t *testing.T, root string) {
 				writeSkillFixture(t, root, "test-skill")
 				// First write the manifests
-				if _, err := runGenerate(root, testMeta, false); err != nil {
+				if _, err := runGenerate(root, testMeta, false, false); err != nil {
 					t.Fatalf("initial write: %v", err)
 				}
 			},
@@ -456,5 +476,31 @@ func TestNewGenerateCmd_NameFlag(t *testing.T) {
 func TestDefaultMarketplaceName(t *testing.T) {
 	if got := defaultMarketplaceName("/tmp/foo/bar"); got != "bar" {
 		t.Errorf("got %q, want %q", got, "bar")
+	}
+}
+
+func TestNewGenerateCmd_StrictFlag(t *testing.T) {
+	root := t.TempDir()
+	writeSkillFixture(t, root, "example-skill")
+	if err := os.MkdirAll(filepath.Join(root, "example-skill", "scripts"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, strict := range []bool{false, true} {
+		cmd := newGenerateCmd()
+		args := []string{root, "--owner", "example-org"}
+		if strict {
+			args = append(args, "--strict")
+		}
+		cmd.SetArgs(args)
+		cmd.SetErr(&bytes.Buffer{})
+		cmd.SetOut(&bytes.Buffer{})
+		err := cmd.Execute()
+		if strict && err == nil {
+			t.Error("--strict: wanted error for scripts/, got none")
+		}
+		if !strict && err != nil {
+			t.Errorf("without --strict: %v", err)
+		}
 	}
 }

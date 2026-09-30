@@ -22,15 +22,15 @@ func newImportCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "import [skill...]",
-		Short: "skillをClaude Code/Codexへimportする",
+		Short: "Import skills into Claude Code / Codex",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runImportCmd(cmd.Context(), pluginclient.ExecRunner{}, ui.HuhPicker{}, args, target, yes, repo, marketplace, source, cmd.OutOrStdout(), cmd.ErrOrStderr())
 		},
 	}
-	cmd.Flags().StringVar(&target, "target", "both", "import先: claude|codex|both")
-	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "非対話モードで実行する(引数のskillを対象にする)")
-	cmd.Flags().StringVar(&repo, "repo", os.Getenv("SKILLCTL_REPO"), "skillを管理しているGitHubリポジトリ(owner/name)。環境変数SKILLCTL_REPOでも指定できる")
-	cmd.Flags().StringVar(&marketplace, "marketplace", "", "marketplace名(generateの--nameと揃える。省略時はリポジトリ名)")
-	cmd.Flags().StringVar(&source, "source", "", "marketplaceのsource(省略時はhttps://github.com/<repo>。ローカル開発時はローカルディレクトリのパスに差し替えられる)")
+	cmd.Flags().StringVar(&target, "target", "both", "where to import: claude|codex|both")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "non-interactive mode: import the skills given as arguments")
+	cmd.Flags().StringVar(&repo, "repo", os.Getenv("SKILLCTL_REPO"), "GitHub repository that hosts the skills (owner/name); can also be set via SKILLCTL_REPO")
+	cmd.Flags().StringVar(&marketplace, "marketplace", "", "marketplace name (must match `generate --name`; default: the repository name)")
+	cmd.Flags().StringVar(&source, "source", "", "marketplace source (default: https://github.com/<repo>; a local directory path also works)")
 	return cmd
 }

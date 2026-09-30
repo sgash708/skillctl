@@ -31,13 +31,13 @@ func (HuhPicker) Pick(items []Item) ([]string, string, error) {
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewMultiSelect[string]().
-				Title("importするskillを選ぶ").
+				Title("Select skills to import").
 				Options(options...).
 				Value(&selectedIDs),
 		),
 		huh.NewGroup(
 			huh.NewSelect[string]().
-				Title("import先").
+				Title("Import target").
 				Options(
 					huh.NewOption("claude", "claude"),
 					huh.NewOption("codex", "codex"),

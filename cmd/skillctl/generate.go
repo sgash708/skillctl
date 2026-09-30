@@ -9,13 +9,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func runGenerate(root string, meta manifest.Meta, check bool) ([]string, error) {
+// runGenerate はroot配下のskillからmanifestを生成(checkならstaleの確認だけ)する。
+// strictなら、skillディレクトリに許可リスト外のファイル(hooks/・.mcp.json等)があるとエラーにする。
+func runGenerate(root string, meta manifest.Meta, check, strict bool) ([]string, error) {
 	skills, err := skillsrepo.Scan(root)
 	if err != nil {
 		return nil, err
 	}
-	if err := skillsrepo.CheckAllowedContents(root, skills); err != nil {
-		return nil, err
+	if strict {
+		if err := skillsrepo.CheckAllowedContents(root, skills); err != nil {
+			return nil, err
+		}
 	}
 	if check {
 		return manifest.Check(root, meta, skills)
@@ -24,18 +28,18 @@ func runGenerate(root string, meta manifest.Meta, check bool) ([]string, error) 
 	return nil, err
 }
 
-// defaultMarketplaceName は--name省略時のmarketplace名として、対象ディレクトリ名を返す。
+// defaultMarketplaceName returns the root directory name, used when --name is omitted.
 func defaultMarketplaceName(root string) string {
-	abs, _ := filepath.Abs(root) // Absが失敗するのはカレントディレクトリが取得できない場合のみ
+	abs, _ := filepath.Abs(root) // Abs fails only when the working directory cannot be determined
 	return filepath.Base(abs)
 }
 
 func newGenerateCmd() *cobra.Command {
-	var check bool
+	var check, strict bool
 	var name, owner string
 	cmd := &cobra.Command{
 		Use:   "generate",
-		Short: "SKILL.mdからplugin.json/marketplace.jsonを生成する",
+		Short: "Generate plugin.json/marketplace.json from SKILL.md files",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			root := "."
 			if len(args) > 0 {
@@ -47,7 +51,7 @@ func newGenerateCmd() *cobra.Command {
 			if name == "" {
 				name = defaultMarketplaceName(root)
 			}
-			stale, err := runGenerate(root, manifest.Meta{Name: name, Owner: owner}, check)
+			stale, err := runGenerate(root, manifest.Meta{Name: name, Owner: owner}, check, strict)
 			if err != nil {
 				return err
 			}
@@ -60,8 +64,9 @@ func newGenerateCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&name, "name", "", "marketplace名(省略時は対象ディレクトリ名)")
-	cmd.Flags().StringVar(&owner, "owner", "", "marketplace.jsonのowner名(必須)")
-	cmd.Flags().BoolVar(&check, "check", false, "生成せず、生成物が最新かどうかだけ確認する")
+	cmd.Flags().StringVar(&name, "name", "", "marketplace name (default: the root directory name)")
+	cmd.Flags().StringVar(&owner, "owner", "", "owner name written to marketplace.json (required)")
+	cmd.Flags().BoolVar(&strict, "strict", false, "reject skill directories that contain anything other than SKILL.md, README.md, .claude-plugin/, agents/ and assets/ (images only)")
+	cmd.Flags().BoolVar(&check, "check", false, "do not write; only check that the generated files are up to date")
 	return cmd
 }

@@ -372,7 +372,7 @@ func TestRunImportCmd(t *testing.T) {
 			args:          []string{"example-skill"},
 			target:        "claude",
 			yes:           true,
-			wantErrSubstr: "PATHに見つかりませんでした",
+			wantErrSubstr: "was found in PATH",
 			wantStdoutIs:  strPtr(""),
 		},
 		{
@@ -531,7 +531,7 @@ func TestRunImportCmd(t *testing.T) {
 			},
 			args:          nil,
 			yes:           false,
-			wantErrSubstr: "skill一覧の取得に失敗しました",
+			wantErrSubstr: "failed to fetch the skill list",
 		},
 		{
 			name: "interactive mode: picker failure propagates as an error",
@@ -584,7 +584,7 @@ func TestRunImportCmd(t *testing.T) {
 			args:          []string{"example-skill", "broken-skill"},
 			target:        "claude",
 			yes:           true,
-			wantErrSubstr: "一部のimportに失敗しました",
+			wantErrSubstr: "some imports failed",
 			wantStdoutHas: []string{
 				"[OK] example-skill -> claude: ok",
 				"[NG] broken-skill -> claude: failed",

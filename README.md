@@ -1,69 +1,96 @@
 # skillctl
 
-GitHubで管理しているskillリポジトリを、Claude Code / Codexへ`plugin`としてimportするCLI。
-skillリポジトリ側の`marketplace.json`・`plugin.json`を`SKILL.md`から生成する`generate`も持つ。
+[日本語](README.ja.md)
 
-## インストール
+A CLI that imports skills from a GitHub repository into **Claude Code** and **Codex** as plugins, and generates the `marketplace.json` / `plugin.json` files that make such a repository installable.
 
-GitHub Releasesから、自分のOS/archに合ったバイナリをダウンロードする。ファイル名は
-`skillctl_<os>_<arch>.tar.gz`(例: `skillctl_darwin_arm64.tar.gz`)。展開して`skillctl`を
-PATHの通った場所に置く。Goがあれば次でも入る。
+- `skillctl import` installs skills from a skill repository into Claude Code, Codex, or both, with an interactive picker or from arguments.
+- `skillctl generate` builds `.claude-plugin/marketplace.json`, each skill's `plugin.json` and, optionally, Codex's `agents/openai.yaml` from your `SKILL.md` files. `--check` fails when they are out of date, which suits CI.
+
+## Install
+
+Download the archive for your OS and architecture from [Releases](https://github.com/sgash708/skillctl/releases) (`skillctl_<os>_<arch>.tar.gz`, `.zip` on Windows), extract it, and put `skillctl` on your `PATH`. With Go installed:
 
 ```bash
 go install github.com/sgash708/skillctl/cmd/skillctl@latest
 ```
 
-## import
+Run `skillctl --version` to check the installation. Windows binaries are built but not regularly tested.
+
+## Import skills
 
 ```bash
-# 対話モード(skill名を省略): 一覧からskillを選び、import先も選ぶ
+# Interactive: pick skills from a list, then choose where to import them
 skillctl import --repo owner/skills
 
-# 非対話モード: skill名を指定する
-skillctl import <skill> --repo owner/skills --target claude|codex|both --yes
+# Non-interactive
+skillctl import <skill>... --repo owner/skills --target claude|codex|both --yes
 ```
 
-| フラグ | 説明 |
+| Flag | Description |
 | --- | --- |
-| `--repo` | skillを管理しているGitHubリポジトリ(`owner/name`)。環境変数`SKILLCTL_REPO`でも指定できる |
-| `--target` | `claude`・`codex`・`both`(デフォルト) |
-| `--marketplace` | marketplace名。`generate --name`と揃える。省略時はリポジトリ名 |
-| `--source` | marketplaceのsource。省略時は`https://github.com/<repo>`。ローカルディレクトリのパスも指定できる |
-| `-y`, `--yes` | 非対話モード。skill名が最低1つ必要 |
+| `--repo` | GitHub repository that hosts the skills, as `owner/name`. Can also be set with the `SKILLCTL_REPO` environment variable. |
+| `--target` | `claude`, `codex`, or `both` (default). |
+| `--marketplace` | Marketplace name. Must match `generate --name`. Defaults to the repository name. |
+| `--source` | Marketplace source. Defaults to `https://github.com/<repo>`. A local directory path also works, which is handy while developing a skill repository. |
+| `-y`, `--yes` | Non-interactive mode. Requires at least one skill name. |
 
-対話モードでは`gh`(skill一覧の取得用)が、importする対象に応じて`claude`/`codex`がPATHに必要。
+Requirements: the `claude` and/or `codex` CLI on `PATH`, matching `--target`. Interactive mode also needs the [GitHub CLI](https://cli.github.com/) (`gh`), logged in if the repository is private.
 
-プロキシ環境などで`https://github.com/...`に繋がらない場合は、SSHのURLを`--source`に渡すと通ることがある。
+If `https://github.com/...` is unreachable, for example behind a proxy, pass an SSH URL instead:
 
 ```bash
 skillctl import <skill> --repo owner/skills --yes --source git@github.com:owner/skills.git
 ```
 
-## generate
+> **Security:** a skill is a plugin that runs inside your agent, and can include hooks, scripts and MCP servers. Import only from repositories you trust, and read a skill before you install it.
 
-skillリポジトリのルートで、各skillの`SKILL.md`から`.claude-plugin/marketplace.json`と
-`<skill>/.claude-plugin/plugin.json`を生成する。
+## Generate manifests
+
+Run this in the root of a skill repository:
 
 ```bash
-skillctl generate --owner owner --name skills [<root>]
+skillctl generate --owner <owner> --name <marketplace-name> [<root>]
 ```
 
-- `--owner`は必須。`--name`は省略するとルートのディレクトリ名になる
-- `--check`を付けると書き込まず、生成物が古いときに非0で終了する。CIで差分検出に使える
-- `SKILL.md`のfrontmatterに`disable-model-invocation: true`または`codex:`セクション
-  (`display_name`/`short_description`/`icon_small`/`icon_large`/`brand_color`/
-  `default_prompt`/`dependencies.tools`)を書くと、
-  [Codexのskillメタデータ](https://developers.openai.com/codex/skills)である
-  `<skill>/agents/openai.yaml`も生成する。どちらも無ければ生成しない
-- `icon_small`/`icon_large`はskillディレクトリからの相対パス(`./assets/xxx.png`等)で書く。
-  画像は`<skill>/assets/`直下に置く。`assets/`には画像(`.png`/`.svg`/`.jpg`/`.jpeg`/`.gif`/`.webp`)だけ置け、サブディレクトリは作れない
+`--owner` is required. `--name` defaults to the name of the root directory.
 
-## 開発
+Expected layout: every direct subdirectory of the root that contains a `SKILL.md` is one skill. Hidden directories are ignored.
+
+```text
+my-skills/
+├── .claude-plugin/marketplace.json   # generated
+├── code-review/
+│   ├── SKILL.md
+│   └── .claude-plugin/plugin.json    # generated
+└── release-notes/
+    ├── SKILL.md
+    ├── scripts/                      # any other files are fine
+    └── agents/openai.yaml            # generated, only if you ask for it (see below)
+```
+
+`SKILL.md` needs a frontmatter with `name` and `description`:
+
+```markdown
+---
+name: code-review
+description: Review a diff for correctness bugs
+---
+```
+
+To generate Codex's `agents/openai.yaml`, add `disable-model-invocation: true` or a `codex:` section to the frontmatter. The `codex:` section accepts `display_name`, `short_description`, `icon_small`, `icon_large`, `brand_color`, `default_prompt` and `dependencies.tools` (see the [Codex skills docs](https://developers.openai.com/codex/skills)). `icon_small` and `icon_large` are paths relative to the skill directory, such as `./assets/icon.png`.
+
+Options:
+
+- `--check` writes nothing and exits non-zero when generated files are stale. Run it in CI.
+- `--strict` rejects skill directories that hold anything besides `SKILL.md`, `README.md`, `.claude-plugin/`, `agents/` and `assets/` (images only, no subdirectories). Use it if you want a skill repository to stay free of hooks, MCP definitions and scripts.
+
+## Development
 
 ```bash
 go test ./... -coverprofile=coverage.out
 ```
 
-## ライセンス
+## License
 
-MIT
+[MIT](LICENSE)
