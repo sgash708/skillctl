@@ -7,6 +7,16 @@ A CLI that imports skills from a GitHub repository into **Claude Code** and **Co
 - `skillctl import` installs skills from a skill repository into Claude Code, Codex, or both, with an interactive picker or from arguments.
 - `skillctl generate` builds `.claude-plugin/marketplace.json`, each skill's `plugin.json` and, optionally, Codex's `agents/openai.yaml` from your `SKILL.md` files. `--check` fails when they are out of date, which suits CI.
 
+## Demo
+
+Non-interactive import (`--yes`), then checking it in Claude Code:
+
+![skillctl import, non-interactive](docs/import-demo.gif)
+
+Interactive import: pick skills from a list, then choose the target.
+
+![skillctl import, interactive](docs/interactive-demo.gif)
+
 ## Install
 
 Download the archive for your OS and architecture from [Releases](https://github.com/sgash708/skillctl/releases) (`skillctl_<os>_<arch>.tar.gz`, `.zip` on Windows), extract it, and put `skillctl` on your `PATH`. With Go installed:

@@ -58,32 +58,32 @@ func TestClaudeTool_ParseMarketplaceEntries(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "github kindはrepoをsourceとして返す",
+			name:   "github kind returns repo as the source",
 			stdout: `[{"name":"anthropic-agent-skills","source":"github","repo":"anthropics/skills"}]`,
 			want:   []MarketplaceEntry{{Name: "anthropic-agent-skills", Source: "anthropics/skills"}},
 		},
 		{
-			name:   "directory kindはpathをsourceとして返す",
+			name:   "directory kind returns path as the source",
 			stdout: `[{"name":"example-skills","source":"directory","path":"/tmp/skills"}]`,
 			want:   []MarketplaceEntry{{Name: "example-skills", Source: "/tmp/skills"}},
 		},
 		{
-			name:   "git kindはurlをsourceとして返す",
+			name:   "git kind returns url as the source",
 			stdout: `[{"name":"example-skills","source":"git","url":"https://github.com/example-org/skills.git"}]`,
 			want:   []MarketplaceEntry{{Name: "example-skills", Source: "https://github.com/example-org/skills.git"}},
 		},
 		{
-			name:   "repo/path/urlのいずれも無ければsourceは空文字",
+			name:   "source is an empty string if none of repo/path/url is present",
 			stdout: `[{"name":"other"}]`,
 			want:   []MarketplaceEntry{{Name: "other", Source: ""}},
 		},
 		{
-			name:   "空配列",
+			name:   "empty array",
 			stdout: `[]`,
 			want:   nil,
 		},
 		{
-			name:    "不正なJSON",
+			name:    "invalid JSON",
 			stdout:  `not json`,
 			wantErr: true,
 		},
@@ -117,25 +117,25 @@ func TestClaudeTool_ParseInstallResult(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "成功",
+			name:    "success",
 			res:     Result{ExitCode: 0, Stdout: `{"outcome":"ok","message":"Successfully installed plugin: example-skill@example-skills"}`},
 			wantOK:  true,
 			wantMsg: "Successfully installed plugin: example-skill@example-skills",
 		},
 		{
-			name:    "既にinstall済み(冪等・成功扱い)",
+			name:    "already installed (idempotent, treated as success)",
 			res:     Result{ExitCode: 0, Stdout: `{"outcome":"ok","message":"Plugin \"example-skill@example-skills\" is already installed (scope: user)"}`},
 			wantOK:  true,
 			wantMsg: `Plugin "example-skill@example-skills" is already installed (scope: user)`,
 		},
 		{
-			name:    "失敗",
+			name:    "failure",
 			res:     Result{ExitCode: 1, Stdout: `{"outcome":"failed","message":"Plugin not found"}`},
 			wantOK:  false,
 			wantMsg: "Plugin not found",
 		},
 		{
-			name:    "不正なJSON",
+			name:    "invalid JSON",
 			res:     Result{ExitCode: 0, Stdout: "not json"},
 			wantErr: true,
 		},
@@ -213,7 +213,7 @@ func TestCodexTool_ParseMarketplaceEntries(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "marketplaceSource.sourceをsourceとして返す",
+			name:   "returns marketplaceSource.source as the source",
 			stdout: `{"marketplaces":[{"name":"example-skills","marketplaceSource":{"sourceType":"local","source":"/tmp/skills"}},{"name":"openai-curated"}]}`,
 			want: []MarketplaceEntry{
 				{Name: "example-skills", Source: "/tmp/skills"},
@@ -221,7 +221,7 @@ func TestCodexTool_ParseMarketplaceEntries(t *testing.T) {
 			},
 		},
 		{
-			name:    "不正なJSON",
+			name:    "invalid JSON",
 			stdout:  `not json`,
 			wantErr: true,
 		},
@@ -254,12 +254,12 @@ func TestCodexTool_ParseInstallResult(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "成功",
+			name:   "success",
 			res:    Result{ExitCode: 0, Stdout: `{"pluginId":"example-skill@example-skills"}`},
 			wantOK: true,
 		},
 		{
-			name:   "失敗(非ゼロ終了)",
+			name:   "failure(non-zero exit)",
 			res:    Result{ExitCode: 1, Stderr: "not found"},
 			wantOK: false,
 		},

@@ -11,14 +11,14 @@ type Item struct {
 	Description string
 }
 
-// maxOptionDescriptionRunes は選択肢1行に収まる説明文の目安の長さ。
-// huhのMultiSelectはviewportの高さを「1オプション=1行」前提で計算するため
-// (m.viewport.Height = len(options))、説明文を丸ごと結合すると折り返して
-// 複数行になり、オプション数と実際に見える範囲がずれてスクロールも効かなくなる。
-// 1行に収まる長さへ切り詰めることで、この前提を成立させる。
+// maxOptionDescriptionRunes is the target length for a description that fits on one option line.
+// huh's MultiSelect computes the viewport height assuming "one option = one line"
+// (m.viewport.Height = len(options)), so joining the full description wraps it into
+// multiple lines, the option count no longer matches the visible range, and scrolling stops working.
+// Truncating to a length that fits on one line makes this assumption hold.
 const maxOptionDescriptionRunes = 40
 
-// truncateRunes はsをmax rune以内へ切り詰める。max以下ならそのまま返す。
+// truncateRunes truncates s to at most max runes. If s is within max, it is returned as is.
 func truncateRunes(s string, max int) string {
 	if utf8.RuneCountInString(s) <= max {
 		return s

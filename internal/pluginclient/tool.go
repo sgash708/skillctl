@@ -11,10 +11,10 @@ type Tool interface {
 	ParseInstallResult(res Result) (ok bool, message string, err error)
 }
 
-// MarketplaceEntry は`<tool> plugin marketplace list --json`の1件分を表す。
-// Sourceは登録時に渡されたsource(URL/ローカルパス)にあたる値のベストエフォートな
-// 復元で、ツール/種別によって異なるJSONフィールドから取り出す。復元できない場合は
-// 空文字列になる(その場合、呼び出し側はsourceの一致比較をスキップする)。
+// MarketplaceEntry represents one item of `<tool> plugin marketplace list --json`.
+// Source is a best-effort recovery of the source (URL/local path) passed at registration,
+// extracted from different JSON fields depending on the tool/kind. If it cannot be recovered it is
+// an empty string (in which case the caller skips the source equality comparison).
 type MarketplaceEntry struct {
 	Name   string
 	Source string

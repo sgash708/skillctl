@@ -8,13 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// newImportCmd はimportコマンドのcobraラッパー。ロジック本体はimport.goのrunImportCmdに
-// あり、そちらはフェイクのRunner/Pickerで100%テストしている。ここでは具象型(実exec/
-// 実端末に依存するExecRunner・HuhPicker)を生成してrunImportCmdへ注入するだけで、実CLI
-// (claude/codex)・実GitHub API・実端末が無いと決定的にテストできない配線部分のため、
-// 意図的にカバレッジ対象から除外している(internal/ui/picker.goと同じ考え方)。この
-// ファイルをRunE本体だけの小さなファイルに分けているのも、除外範囲をこの配線部分だけに
-// 限定し、runImportCmd以下のロジックはカバレッジ計測の対象に残すため。
+// newImportCmd is the cobra wrapper for the import command. The body logic lives in runImportCmd in import.go,
+// which is tested to 100% with a fake Runner/Picker. This file only creates the concrete types (ExecRunner and HuhPicker, which depend on
+// real exec / a real terminal) and injects them into runImportCmd. It is wiring that cannot be tested deterministically without the real CLIs
+// (claude/codex), the real GitHub API, and a real terminal, so it is
+// intentionally excluded from coverage (same idea as internal/ui/picker.go). The reason this
+// file is split out as a small file containing only the RunE body is to limit the exclusion to just this wiring
+// and keep the logic below runImportCmd within coverage measurement.
 func newImportCmd() *cobra.Command {
 	var target string
 	var yes bool

@@ -4,8 +4,8 @@ import "testing"
 
 func sampleItems() []Item {
 	return []Item{
-		{ID: "another-skill", Description: "別のskill"},
-		{ID: "example-skill", Description: "スリープ抑止"},
+		{ID: "another-skill", Description: "Another skill"},
+		{ID: "example-skill", Description: "Sleep prevention"},
 	}
 }
 
@@ -93,11 +93,11 @@ func TestTruncateRunes(t *testing.T) {
 		max  int
 		want string
 	}{
-		{name: "空文字はそのまま", s: "", max: 10, want: ""},
-		{name: "max未満はそのまま", s: "example-skill", max: 40, want: "example-skill"},
-		{name: "maxちょうどはそのまま(省略記号を付けない)", s: "0123456789", max: 10, want: "0123456789"},
-		{name: "maxを1文字超えたら切り詰めて省略記号を付ける", s: "01234567890", max: 10, want: "0123456789…"},
-		{name: "マルチバイト文字はrune単位で数える(バイト単位で壊さない)", s: "あいうえおかきくけこさ", max: 10, want: "あいうえおかきくけこ…"},
+		{name: "empty string is returned as is", s: "", max: 10, want: ""},
+		{name: "below max is returned as is", s: "example-skill", max: 40, want: "example-skill"},
+		{name: "exactly max is returned as is (no ellipsis)", s: "0123456789", max: 10, want: "0123456789"},
+		{name: "one rune over max is truncated with an ellipsis", s: "01234567890", max: 10, want: "0123456789…"},
+		{name: "CJK characters are counted per rune (not broken per byte)", s: "\u3042\u3044\u3046\u3048\u304a\u304b\u304d\u304f\u3051\u3053\u3055", max: 10, want: "\u3042\u3044\u3046\u3048\u304a\u304b\u304d\u304f\u3051\u3053…"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -118,7 +118,7 @@ func TestSelection_SetTarget(t *testing.T) {
 		{name: "claude", target: "claude"},
 		{name: "codex", target: "codex"},
 		{name: "both", target: "both"},
-		{name: "不正な値", target: "invalid", wantErr: true},
+		{name: "invalid value", target: "invalid", wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

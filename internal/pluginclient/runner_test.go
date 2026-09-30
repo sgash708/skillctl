@@ -15,20 +15,20 @@ func TestExecRunner_Run(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name:       "正常終了・標準出力を取得",
+			name:       "normal exit, captures stdout",
 			cmdName:    "sh",
 			args:       []string{"-c", "echo hello"},
 			wantStdout: "hello\n",
 			wantExit:   0,
 		},
 		{
-			name:     "非ゼロ終了コード",
+			name:     "non-zero exit code",
 			cmdName:  "sh",
 			args:     []string{"-c", "exit 7"},
 			wantExit: 7,
 		},
 		{
-			name:    "存在しないコマンド",
+			name:    "nonexistent command",
 			cmdName: "definitely-not-a-real-binary-xyz",
 			wantErr: true,
 		},

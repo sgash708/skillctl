@@ -51,34 +51,34 @@ func TestClient_EnsureMarketplace(t *testing.T) {
 		wantErrIs string // substring expected in the error, if wantErr
 	}{
 		{
-			name:      "未登録なら追加する",
+			name:      "adds if not registered",
 			listRes:   Result{ExitCode: 0, Stdout: `[]`},
 			wantAdded: true,
 		},
 		{
-			name:      "登録済み・同じsourceなら追加しない",
+			name:      "does not add if registered with the same source",
 			listRes:   Result{ExitCode: 0, Stdout: `[{"name":"example-skills","source":"git","url":"https://example.com/skills"}]`},
 			wantAdded: false,
 		},
 		{
-			name:      "登録済み・sourceの末尾に/や.gitが付いているだけなら同一source扱いで追加しない",
+			name:      "does not add if registered and the source differs only by a trailing / or .git (treated as the same source)",
 			listRes:   Result{ExitCode: 0, Stdout: `[{"name":"example-skills","source":"git","url":"https://example.com/skills.git"}]`},
 			wantAdded: false,
 		},
 		{
-			name:      "登録済みだがsourceの情報が無ければ判断できないので追加しない",
+			name:      "does not add if registered but there is no source info to decide on",
 			listRes:   Result{ExitCode: 0, Stdout: `[{"name":"example-skills"}]`},
 			wantAdded: false,
 		},
 		{
-			name:      "登録済み・異なるsourceならエラー(自動での追加/差し替えはしない)",
+			name:      "errors if registered with a different source (no automatic add/replace)",
 			listRes:   Result{ExitCode: 0, Stdout: `[{"name":"example-skills","source":"directory","path":"/tmp/local-dev"}]`},
 			wantAdded: false,
 			wantErr:   true,
 			wantErrIs: "already registered from a different source",
 		},
 		{
-			name:      "他のmarketplaceが混ざっていても対象のnameだけを見て、同じsourceなら追加しない",
+			name:      "looks only at the target name even if other marketplaces are mixed in, and does not add if the source is the same",
 			listRes:   Result{ExitCode: 0, Stdout: `[{"name":"other-marketplace","source":"github","repo":"other/repo"},{"name":"example-skills","source":"git","url":"https://example.com/skills"}]`},
 			wantAdded: false,
 		},

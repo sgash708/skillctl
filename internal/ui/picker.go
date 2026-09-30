@@ -1,7 +1,7 @@
-// Package ui: このファイルは実端末でのインタラクティブ入力を行う薄いアダプタで、
-// huh.Form.Run() は実端末なしでは決定的にテストできないため、
-// カバレッジ計測(CIのしきい値チェック)から明示的に除外する。
-// 選択ロジック本体は selection.go にありそちらは100%テストされている。
+// Package ui: this file is a thin adapter for interactive input on a real terminal.
+// huh.Form.Run() cannot be tested deterministically without a real terminal,
+// so it is explicitly excluded from coverage measurement (the CI threshold check).
+// The selection logic itself lives in selection.go and is tested to 100%.
 package ui
 
 import (

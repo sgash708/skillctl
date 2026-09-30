@@ -18,8 +18,8 @@ type Skill struct {
 	Codex                  *CodexConfig
 }
 
-// CodexConfig はSKILL.mdのfrontmatterにある`codex:`セクションから読み取った、
-// Codex固有のagents/openai.yaml生成用メタデータ。
+// CodexConfig is Codex-specific metadata, read from the `codex:` section in the SKILL.md frontmatter,
+// used to generate agents/openai.yaml.
 type CodexConfig struct {
 	DisplayName      string
 	ShortDescription string
@@ -131,19 +131,19 @@ func Scan(root string) ([]Skill, error) {
 	return skills, nil
 }
 
-// pluginDirName はplugin機構向けの生成物を置くディレクトリ名。
+// pluginDirName is the name of the directory that holds the artifacts for the plugin mechanism.
 const pluginDirName = ".claude-plugin"
 
-// agentsDirName はCodex向けのagents/openai.yamlを置くディレクトリ名。
+// agentsDirName is the name of the directory that holds agents/openai.yaml for Codex.
 const agentsDirName = "agents"
 
-// assetsDirName はagents/openai.yamlのicon_small/icon_largeが参照する画像を置くディレクトリ名。
+// assetsDirName is the name of the directory that holds the images referenced by icon_small/icon_large in agents/openai.yaml.
 const assetsDirName = "assets"
 
-// allowedSkillDirEntries は各skillディレクトリ直下に許可するエントリ名。
-// これ以外(hooks/・.mcp.json・commands/等)が見つかった場合はエラーにする。
-// skill配下はそのままplugin(Claude Code/Codex)として配布されるため、
-// hooksやMCPサーバ定義が紛れ込むと意図せず任意コマンド実行等が配布されてしまう。
+// allowedSkillDirEntries are the entry names allowed directly under each skill directory.
+// It is an error if anything else (hooks/, .mcp.json, commands/, etc.) is found.
+// Everything under a skill is distributed as-is as a plugin (Claude Code/Codex),
+// so a stray hooks or MCP server definition would unintentionally distribute arbitrary command execution and the like.
 var allowedSkillDirEntries = map[string]bool{
 	"SKILL.md":    true,
 	"README.md":   true,
@@ -152,15 +152,15 @@ var allowedSkillDirEntries = map[string]bool{
 	assetsDirName: true,
 }
 
-// allowedNestedDirEntries は、上記のうちディレクトリであるエントリそれぞれの
-// 直下に許可するファイル名。assetsDirNameは可変のファイル名を許可するため、
-// ここではなく拡張子ベースのallowedAssetExtensionsで別途チェックする。
+// allowedNestedDirEntries are the file names allowed directly under each of the entries above
+// that are directories. assetsDirName allows variable file names, so it is checked
+// separately here by the extension-based allowedAssetExtensions instead.
 var allowedNestedDirEntries = map[string]map[string]bool{
 	pluginDirName: {"plugin.json": true},
 	agentsDirName: {"openai.yaml": true},
 }
 
-// allowedAssetExtensions はassets/配下に置ける画像ファイルの拡張子(小文字)。
+// allowedAssetExtensions are the (lowercase) extensions of image files allowed under assets/.
 var allowedAssetExtensions = map[string]bool{
 	".png":  true,
 	".svg":  true,
@@ -170,9 +170,9 @@ var allowedAssetExtensions = map[string]bool{
 	".webp": true,
 }
 
-// CheckAllowedContents は各skillディレクトリの直下が、想定するファイル
+// CheckAllowedContents verifies that the top level of each skill directory consists only of the expected files
 // (SKILL.md / README.md / .claude-plugin/plugin.json / agents/openai.yaml /
-// assets/配下の画像ファイル)だけで構成されていることを確認する。
+// and image files under assets/).
 func CheckAllowedContents(root string, skills []Skill) error {
 	for _, s := range skills {
 		dir := filepath.Join(root, s.Dir)

@@ -24,10 +24,10 @@ func TestFetch(t *testing.T) {
 		Name:  "example-skills",
 		Owner: manifest.Owner{Name: "example-org"},
 		Plugins: []manifest.Plugin{
-			{Name: "example-skill", Source: "./example-skill", Description: "スリープ抑止", Version: "0.0.0"},
+			{Name: "example-skill", Source: "./example-skill", Description: "Sleep prevention", Version: "0.0.0"},
 		},
 	}
-	mpJSON := `{"name":"example-skills","owner":{"name":"example-org"},"plugins":[{"name":"example-skill","source":"./example-skill","description":"スリープ抑止","version":"0.0.0"}]}`
+	mpJSON := `{"name":"example-skills","owner":{"name":"example-org"},"plugins":[{"name":"example-skill","source":"./example-skill","description":"Sleep prevention","version":"0.0.0"}]}`
 	encoded := base64.StdEncoding.EncodeToString([]byte(mpJSON))
 
 	tests := []struct {
@@ -37,32 +37,32 @@ func TestFetch(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "正常系",
+			name:   "happy path",
 			runner: fakeRunner{res: pluginclient.Result{ExitCode: 0, Stdout: `{"content":"` + encoded + `"}`}},
 			want:   mp.Plugins,
 		},
 		{
-			name:    "gh api失敗",
+			name:    "gh api failure",
 			runner:  fakeRunner{err: errors.New("gh not found")},
 			wantErr: true,
 		},
 		{
-			name:    "非ゼロ終了",
+			name:    "non-zero exit",
 			runner:  fakeRunner{res: pluginclient.Result{ExitCode: 1, Stderr: "404"}},
 			wantErr: true,
 		},
 		{
-			name:    "contentが不正なbase64",
+			name:    "content is invalid base64",
 			runner:  fakeRunner{res: pluginclient.Result{ExitCode: 0, Stdout: `{"content":"***not-base64***"}`}},
 			wantErr: true,
 		},
 		{
-			name:    "contentが不正なJSON",
+			name:    "content is invalid JSON",
 			runner:  fakeRunner{res: pluginclient.Result{ExitCode: 0, Stdout: `{"content":"` + base64.StdEncoding.EncodeToString([]byte("not json")) + `"}`}},
 			wantErr: true,
 		},
 		{
-			name:    "payloadのJSONが不正",
+			name:    "payload JSON is invalid",
 			runner:  fakeRunner{res: pluginclient.Result{ExitCode: 0, Stdout: `{invalid json}`}},
 			wantErr: true,
 		},

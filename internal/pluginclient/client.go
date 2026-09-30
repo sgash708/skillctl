@@ -15,8 +15,8 @@ func NewClient(tool Tool, runner Runner) *Client {
 	return &Client{Tool: tool, Runner: runner}
 }
 
-// normalizeMarketplaceSource は、末尾の"/"や".git"といった些細な表記差分を無視して
-// sourceを比較できるようにする。
+// normalizeMarketplaceSource makes sources comparable while ignoring trivial notation differences such as
+// a trailing "/" or ".git".
 func normalizeMarketplaceSource(s string) string {
 	s = strings.TrimSuffix(s, "/")
 	s = strings.TrimSuffix(s, ".git")
@@ -36,8 +36,8 @@ func (c *Client) EnsureMarketplace(ctx context.Context, marketplaceName, source 
 		if e.Name != marketplaceName {
 			continue
 		}
-		// e.Sourceが空(=このツール/エントリからは登録元を復元できなかった)場合は
-		// 判断材料が無いので、これまで通り「登録済みなら何もしない」に倒す。
+		// If e.Source is empty (= the registration source could not be recovered from this tool/entry),
+		// there is nothing to base a decision on, so fall back to the existing behavior of "do nothing if already registered".
 		if e.Source != "" && normalizeMarketplaceSource(e.Source) != normalizeMarketplaceSource(source) {
 			return fmt.Errorf("%s: marketplace %q is already registered from a different source (%s); run `%s plugin marketplace remove %s` first if you want to switch sources", c.Tool.Name(), marketplaceName, e.Source, c.Tool.Name(), marketplaceName)
 		}

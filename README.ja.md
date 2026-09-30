@@ -7,6 +7,16 @@ GitHub上のskillリポジトリを **Claude Code** / **Codex** へplugin とし
 - `skillctl import`: skillリポジトリのskillを、Claude Code・Codex・その両方へimportする。対話ピッカーと引数指定のどちらでも使える
 - `skillctl generate`: `SKILL.md`から`.claude-plugin/marketplace.json`、各skillの`plugin.json`、必要ならCodex用の`agents/openai.yaml`を生成する。`--check`は生成物が古いと失敗するのでCIに向く
 
+## デモ
+
+非対話モード(`--yes`)でimportし、Claude Codeで確認するまで。
+
+![skillctl import(非対話モード)](docs/import-demo.gif)
+
+対話モード。一覧からskillを選び、import先を選ぶ。
+
+![skillctl import(対話モード)](docs/interactive-demo.gif)
+
 ## インストール
 
 [Releases](https://github.com/sgash708/skillctl/releases)から、OS/archに合ったアーカイブ(`skillctl_<os>_<arch>.tar.gz`、Windowsは`.zip`)をダウンロードして展開し、`skillctl`をPATHの通った場所に置く。Goがあれば次でも入る。

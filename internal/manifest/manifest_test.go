@@ -15,8 +15,8 @@ var testMeta = Meta{Name: "example-skills", Owner: "example-org"}
 
 func sampleSkills() []skillsrepo.Skill {
 	return []skillsrepo.Skill{
-		{Name: "another-skill", Description: "別のskill", Dir: "another-skill"},
-		{Name: "example-skill", Description: "スリープ抑止", Dir: "example-skill"},
+		{Name: "another-skill", Description: "Another skill", Dir: "another-skill"},
+		{Name: "example-skill", Description: "Sleep prevention", Dir: "example-skill"},
 	}
 }
 
@@ -30,8 +30,8 @@ func TestBuildMarketplace(t *testing.T) {
 		t.Errorf("Owner.Name = %q, want %q", got.Owner.Name, testMeta.Owner)
 	}
 	want := []Plugin{
-		{Name: "another-skill", Source: "./another-skill", Description: "別のskill", Version: PluginVersion},
-		{Name: "example-skill", Source: "./example-skill", Description: "スリープ抑止", Version: PluginVersion},
+		{Name: "another-skill", Source: "./another-skill", Description: "Another skill", Version: PluginVersion},
+		{Name: "example-skill", Source: "./example-skill", Description: "Sleep prevention", Version: PluginVersion},
 	}
 	if len(got.Plugins) != len(want) {
 		t.Fatalf("len(Plugins) = %d, want %d", len(got.Plugins), len(want))
@@ -44,9 +44,9 @@ func TestBuildMarketplace(t *testing.T) {
 }
 
 func TestBuildPluginManifest(t *testing.T) {
-	s := skillsrepo.Skill{Name: "example-skill", Description: "スリープ抑止", Dir: "example-skill"}
+	s := skillsrepo.Skill{Name: "example-skill", Description: "Sleep prevention", Dir: "example-skill"}
 	got := BuildPluginManifest(s)
-	want := PluginManifest{Name: "example-skill", Description: "スリープ抑止", Version: PluginVersion}
+	want := PluginManifest{Name: "example-skill", Description: "Sleep prevention", Version: PluginVersion}
 	if got != want {
 		t.Errorf("got = %+v, want %+v", got, want)
 	}
@@ -256,7 +256,7 @@ func TestWrite_OpenAIYAMLMkdirAllError(t *testing.T) {
 	if err := os.MkdirAll(skillDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	// "agents" という名前のファイルを事前に置き、MkdirAll(agents/)を失敗させる
+	// Pre-create a file named "agents" to make MkdirAll(agents/) fail
 	if err := os.WriteFile(filepath.Join(skillDir, "agents"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -272,7 +272,7 @@ func TestWrite_OpenAIYAMLWriteFileError(t *testing.T) {
 		{Name: "my-skill", Description: "desc", Dir: "my-skill", DisableModelInvocation: true},
 	}
 	skillDir := filepath.Join(root, skills[0].Dir)
-	// openai.yaml をディレクトリとして事前に作っておき、WriteFileを失敗させる
+	// Pre-create openai.yaml as a directory to make WriteFile fail
 	if err := os.MkdirAll(filepath.Join(skillDir, "agents", "openai.yaml"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -288,7 +288,7 @@ func TestWrite_OpenAIYAMLRemoveError(t *testing.T) {
 		{Name: "plain-skill", Description: "desc", Dir: "plain-skill"},
 	}
 	skillDir := filepath.Join(root, skills[0].Dir)
-	// openai.yaml を空でないディレクトリにしておき、生成対象外時のos.Removeを失敗させる
+	// Make openai.yaml a non-empty directory to make os.Remove fail when it is not a generation target
 	oaiDir := filepath.Join(skillDir, "agents", "openai.yaml")
 	if err := os.MkdirAll(oaiDir, 0o755); err != nil {
 		t.Fatal(err)
@@ -477,8 +477,8 @@ func TestWriteAndCheck(t *testing.T) {
 		t.Fatalf("Check reported stale files right after Write: %v", stale)
 	}
 
-	// マニフェスト生成後にskillの説明が変わったら stale として検出される
-	skills[0].Description = "更新後の説明"
+	// If the skill description changes after the manifest is generated, it is detected as stale
+	skills[0].Description = "Updated description"
 	stale, err = Check(root, testMeta, skills)
 	if err != nil {
 		t.Fatalf("Check after change: %v", err)

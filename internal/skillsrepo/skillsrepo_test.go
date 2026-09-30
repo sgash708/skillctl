@@ -26,72 +26,72 @@ func TestScan(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "正常系: 2つのskillをname昇順で返す",
+			name: "happy path: returns two skills sorted by name ascending",
 			setup: func(t *testing.T, root string) {
-				writeSkill(t, root, "example-skill", "---\nname: example-skill\ndescription: スリープ抑止\n---\nbody\n")
-				writeSkill(t, root, "another-skill", "---\nname: another-skill\ndescription: 別のskill\n---\nbody\n")
+				writeSkill(t, root, "example-skill", "---\nname: example-skill\ndescription: Sleep prevention\n---\nbody\n")
+				writeSkill(t, root, "another-skill", "---\nname: another-skill\ndescription: Another skill\n---\nbody\n")
 			},
 			want: []Skill{
-				{Name: "another-skill", Description: "別のskill", Dir: "another-skill"},
-				{Name: "example-skill", Description: "スリープ抑止", Dir: "example-skill"},
+				{Name: "another-skill", Description: "Another skill", Dir: "another-skill"},
+				{Name: "example-skill", Description: "Sleep prevention", Dir: "example-skill"},
 			},
 		},
 		{
-			name: "SKILL.mdが無いディレクトリは無視する",
+			name: "ignores directories without SKILL.md",
 			setup: func(t *testing.T, root string) {
-				writeSkill(t, root, "example-skill", "---\nname: example-skill\ndescription: スリープ抑止\n---\nbody\n")
+				writeSkill(t, root, "example-skill", "---\nname: example-skill\ndescription: Sleep prevention\n---\nbody\n")
 				if err := os.MkdirAll(filepath.Join(root, "tools"), 0o755); err != nil {
 					t.Fatal(err)
 				}
 			},
 			want: []Skill{
-				{Name: "example-skill", Description: "スリープ抑止", Dir: "example-skill"},
+				{Name: "example-skill", Description: "Sleep prevention", Dir: "example-skill"},
 			},
 		},
 		{
-			name: "隠しディレクトリは無視する",
+			name: "ignores hidden directories",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, ".github", "---\nname: x\ndescription: y\n---\n")
 			},
 			want: []Skill{},
 		},
 		{
-			name: "frontmatterの区切りが無ければエラー",
+			name: "errors if the frontmatter delimiter is missing",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, "broken", "name: broken\ndescription: no frontmatter\n")
 			},
 			wantErr: true,
 		},
 		{
-			name: "descriptionが空ならエラー",
+			name: "errors if description is empty",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, "broken", "---\nname: broken\ndescription: \"\"\n---\n")
 			},
 			wantErr: true,
 		},
 		{
-			name: "nameが空ならエラー",
+			name: "errors if name is empty",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, "broken", "---\nname: \"\"\ndescription: test\n---\n")
 			},
 			wantErr: true,
 		},
 		{
-			name: "frontmatterが無効なYAMLならエラー",
+			name: "errors if the frontmatter is invalid YAML",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, "broken", "---\n[invalid: yaml: \n---\n")
 			},
 			wantErr: true,
 		},
 		{
-			name: "frontmatterの閉じ区切りが無ければエラー",
+			name: "errors if the frontmatter closing delimiter is missing",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, "broken", "---\nname: broken\ndescription: test\n")
 			},
 			wantErr: true,
 		},
 		{
-			name: "descriptionの値に---という文字列が含まれていても閉じ区切りと誤認しない",
+			name: "does not mistake a --- inside the description value for the closing delimiter",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, "dashes", "---\nname: dashes\ndescription: \"some steps --- like this\"\n---\nbody\n")
 			},
@@ -100,14 +100,14 @@ func TestScan(t *testing.T) {
 			},
 		},
 		{
-			name: "codex.dependencies.tools[].typeが空ならエラー",
+			name: "errors if codex.dependencies.tools[].type is empty",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, "broken", "---\nname: broken\ndescription: test\ncodex:\n  dependencies:\n    tools:\n      - value: github\n---\n")
 			},
 			wantErr: true,
 		},
 		{
-			name: "codex.dependencies.tools[].valueが空ならエラー",
+			name: "errors if codex.dependencies.tools[].value is empty",
 			setup: func(t *testing.T, root string) {
 				writeSkill(t, root, "broken", "---\nname: broken\ndescription: test\ncodex:\n  dependencies:\n    tools:\n      - type: mcp\n---\n")
 			},
@@ -248,7 +248,7 @@ func TestCheckAllowedContents(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "SKILL.md, README.md, .claude-plugin/plugin.jsonだけならOK",
+			name: "OK with only SKILL.md, README.md, .claude-plugin/plugin.json",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, ".claude-plugin"), 0o755); err != nil {
@@ -267,7 +267,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			skills: []Skill{{Name: "example-skill", Dir: "example-skill"}},
 		},
 		{
-			name: "generate未実行(.claude-pluginがまだ無い)でもOK",
+			name: "OK even if generate has not run (.claude-plugin does not exist yet)",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -280,7 +280,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			skills: []Skill{{Name: "example-skill", Dir: "example-skill"}},
 		},
 		{
-			name: "skillディレクトリ直下に想定外のディレクトリ(hooks/)があればエラー",
+			name: "errors if there is an unexpected directory (hooks/) directly under the skill directory",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, "hooks"), 0o755); err != nil {
@@ -297,7 +297,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "skillディレクトリ直下に想定外のファイル(.mcp.json)があればエラー",
+			name: "errors if there is an unexpected file (.mcp.json) directly under the skill directory",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -314,7 +314,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: ".claude-plugin配下に想定外のファイルがあればエラー",
+			name: "errors if there is an unexpected file under .claude-plugin",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, ".claude-plugin"), 0o755); err != nil {
@@ -334,7 +334,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "SKILL.md, README.md, .claude-plugin/plugin.json, agents/openai.yamlだけならOK",
+			name: "OK with only SKILL.md, README.md, .claude-plugin/plugin.json, agents/openai.yaml",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, "agents"), 0o755); err != nil {
@@ -350,7 +350,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			skills: []Skill{{Name: "example-skill", Dir: "example-skill"}},
 		},
 		{
-			name: "agents配下にopenai.yaml以外のファイルがあればエラー",
+			name: "errors if there is a file other than openai.yaml under agents",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, "agents"), 0o755); err != nil {
@@ -367,7 +367,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "agentsがディレクトリではなくファイルならエラー",
+			name: "errors if agents is a file rather than a directory",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -384,7 +384,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "assets配下に画像ファイル(.png, .svg)があればOK",
+			name: "OK if there are image files (.png, .svg) under assets",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, "assets"), 0o755); err != nil {
@@ -403,7 +403,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			skills: []Skill{{Name: "example-skill", Dir: "example-skill"}},
 		},
 		{
-			name: "assets配下に画像以外のファイルがあればエラー",
+			name: "errors if there is a non-image file under assets",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, "assets"), 0o755); err != nil {
@@ -420,7 +420,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "assets配下にサブディレクトリがあればエラー",
+			name: "errors if there is a subdirectory under assets",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, "assets", "nested"), 0o755); err != nil {
@@ -434,7 +434,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "assetsがディレクトリではなくファイルならエラー",
+			name: "errors if assets is a file rather than a directory",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -451,15 +451,15 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "skillディレクトリ自体が読めなければエラー",
+			name: "errors if the skill directory itself cannot be read",
 			setup: func(t *testing.T, root string) {
-				// dirを作らない(Scanしないので存在しないケースを模す)
+				// Do not create dir (simulates a non-existent case since we do not Scan)
 			},
 			skills:  []Skill{{Name: "missing", Dir: "missing"}},
 			wantErr: true,
 		},
 		{
-			name: ".claude-pluginがディレクトリではなくファイルならエラー",
+			name: "errors if .claude-plugin is a file rather than a directory",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -476,7 +476,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: ".claude-pluginが読めなければエラー",
+			name: "errors if .claude-plugin cannot be read",
 			setup: func(t *testing.T, root string) {
 				if os.Geteuid() == 0 {
 					t.Skip("running as root, permission test not meaningful")
@@ -498,7 +498,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "assetsが読めなければエラー",
+			name: "errors if assets cannot be read",
 			setup: func(t *testing.T, root string) {
 				if os.Geteuid() == 0 {
 					t.Skip("running as root, permission test not meaningful")
@@ -520,7 +520,7 @@ func TestCheckAllowedContents(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "assets配下にシンボリックリンクがあればエラー",
+			name: "errors if there is a symlink under assets",
 			setup: func(t *testing.T, root string) {
 				dir := filepath.Join(root, "example-skill")
 				if err := os.MkdirAll(filepath.Join(dir, "assets"), 0o755); err != nil {

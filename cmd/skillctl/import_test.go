@@ -32,7 +32,7 @@ func (stubTool) ParseInstallResult(res pluginclient.Result) (bool, string, error
 }
 
 type stubRunner struct {
-	fail map[string]bool // pluginID -> 失敗させるか
+	fail map[string]bool // pluginID -> whether to make it fail
 }
 
 func (r stubRunner) Run(ctx context.Context, name string, args ...string) (pluginclient.Result, error) {
@@ -43,7 +43,7 @@ func (r stubRunner) Run(ctx context.Context, name string, args ...string) (plugi
 	return pluginclient.Result{ExitCode: 0, Stdout: "ok:" + pluginID}, nil
 }
 
-// erroringRunner はRun自体がエラーを返す(CLI起動失敗などを模す)スタブ。
+// erroringRunner is a stub whose Run itself returns an error (simulating a CLI launch failure, etc.).
 type erroringRunner struct{}
 
 func (erroringRunner) Run(ctx context.Context, name string, args ...string) (pluginclient.Result, error) {
@@ -128,7 +128,7 @@ func TestRunImport(t *testing.T) {
 
 // --- availableClients ---
 
-// versionRunner はexecutable名ごとの `--version` の結果(または起動自体の失敗)を模す。
+// versionRunner simulates the result of `--version` per executable name (or a failure to launch at all).
 type versionRunner struct {
 	results map[string]pluginclient.Result
 	errFor  map[string]bool
@@ -300,9 +300,9 @@ func TestPrintResults(t *testing.T) {
 
 // --- runImportCmd ---
 
-// importCmdFakeRunner はexec名+引数の組み合わせごとに結果/エラーを返すフェイク。
-// (internal/pluginclient/client_test.goのfakeRunnerと同じ考え方)。callsに全呼び出しを
-// 記録し、「特定のtargetに一切触れていないこと」をテストで確認できるようにする。
+// importCmdFakeRunner is a fake that returns a result/error per combination of exec name + arguments.
+// (Same idea as fakeRunner in internal/pluginclient/client_test.go.) It records all calls in
+// calls so tests can verify that "a specific target was never touched".
 type importCmdFakeRunner struct {
 	results map[string]pluginclient.Result
 	errFor  map[string]error
@@ -325,7 +325,7 @@ func (f *importCmdFakeRunner) Run(ctx context.Context, name string, args ...stri
 	return pluginclient.Result{ExitCode: 0}, nil
 }
 
-// fakePicker はui.Pickerの決定的なテストダブル。
+// fakePicker is a deterministic test double for ui.Picker.
 type fakePicker struct {
 	ids    []string
 	target string
@@ -353,12 +353,12 @@ func TestRunImportCmd(t *testing.T) {
 		wantStdoutIs  *string
 		wantStderrHas []string
 		wantStderrIs  *string
-		// wantNoCallsContaining: 実行後、runner.callsのいずれにもこの文字列を含む
-		// 呼び出しが存在しないことを確認する(例: "codex"を指定して、codexが一切
-		// touchされていないことを確認する)。
+		// wantNoCallsContaining: after the run, verifies that no call in runner.calls contains this string
+		// (e.g. specify "codex" and verify that codex was never
+		// touched).
 		wantNoCallsContaining string
-		// wantNoCalls: runner.callsが完全に空である(=どのclientにも一切触れて
-		// いない)ことを確認する。
+		// wantNoCalls: verifies that runner.calls is completely empty (= no client was
+		// touched at all).
 		wantNoCalls bool
 	}{
 		{
@@ -644,9 +644,9 @@ func TestRunImportCmd(t *testing.T) {
 
 func strPtr(s string) *string { return &s }
 
-// mustGhAPIResult はcatalog.Fetchが読む `gh api` レスポンス(marketplace.jsonをbase64化した
-// content)をテーブル内リテラルで組み立てるためのヘルパー。json.Marshalの入力は固定の構造体
-// なので失敗は起こり得ず、panicで十分。
+// mustGhAPIResult is a helper to build, as an in-table literal, the `gh api` response that catalog.Fetch reads (the base64-encoded
+// content of marketplace.json). The input to json.Marshal is a fixed struct
+// so it cannot fail, and a panic is enough.
 func mustGhAPIResult(plugins []manifest.Plugin) pluginclient.Result {
 	mp := manifest.Marketplace{Plugins: plugins}
 	body, err := json.Marshal(mp)

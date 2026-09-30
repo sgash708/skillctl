@@ -13,7 +13,7 @@ import (
 
 const PluginVersion = "0.0.0"
 
-// Meta はmarketplace.jsonに書き込むmarketplace名とownerを表す。
+// Meta represents the marketplace name and owner written to marketplace.json.
 type Meta struct {
 	Name  string
 	Owner string
@@ -45,8 +45,8 @@ type PluginManifest struct {
 	Version     string `json:"version"`
 }
 
-// OpenAIYAML はCodex向けのagents/openai.yamlの内容を表す。
-// フィールド仕様: https://developers.openai.com/codex/skills (agents/openai.yaml)
+// OpenAIYAML represents the contents of agents/openai.yaml for Codex.
+// Field spec: https://developers.openai.com/codex/skills (agents/openai.yaml)
 type OpenAIYAML struct {
 	Interface    *OpenAIInterface    `yaml:"interface,omitempty"`
 	Dependencies *OpenAIDependencies `yaml:"dependencies,omitempty"`
@@ -78,9 +78,9 @@ type OpenAIPolicy struct {
 	AllowImplicitInvocation bool `yaml:"allow_implicit_invocation"`
 }
 
-// BuildOpenAIYAML はskillのfrontmatterから agents/openai.yaml の内容を組み立てる。
-// codexセクションもdisable-model-invocationも指定されていないskillは、デフォルト値だけの
-// ノイズファイルを量産しないよう、生成対象外(ok=false)として扱う。
+// BuildOpenAIYAML builds the contents of agents/openai.yaml from a skill's frontmatter.
+// A skill that specifies neither a codex section nor disable-model-invocation is treated as not to be generated (ok=false),
+// so as not to mass-produce noise files containing only default values.
 func BuildOpenAIYAML(s skillsrepo.Skill) (OpenAIYAML, bool) {
 	if s.Codex == nil && !s.DisableModelInvocation {
 		return OpenAIYAML{}, false
@@ -245,9 +245,9 @@ func Check(root string, meta Meta, skills []skillsrepo.Skill) ([]string, error) 
 		gotYBytes, err := os.ReadFile(oaiPath)
 		switch {
 		case !wantOK && errors.Is(err, fs.ErrNotExist):
-			// 生成対象外で実ファイルも無い: 最新の状態
+			// Not a generation target and no actual file exists: up to date
 		case !wantOK && err == nil:
-			// codexセクション等が外れたのに生成物が残っている: stale
+			// The codex section etc. was removed but the generated file remains: stale
 			stale = append(stale, filepath.Join(s.Dir, "agents", "openai.yaml"))
 		case !wantOK:
 			return nil, err

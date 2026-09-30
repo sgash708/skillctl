@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// runGenerate はroot配下のskillからmanifestを生成(checkならstaleの確認だけ)する。
-// strictなら、skillディレクトリに許可リスト外のファイル(hooks/・.mcp.json等)があるとエラーにする。
+// runGenerate generates the manifests from the skills under root (with check, only verifies whether they are stale).
+// In strict mode, it errors if a skill directory contains files outside the allowlist (hooks/, .mcp.json, etc.).
 func runGenerate(root string, meta manifest.Meta, check, strict bool) ([]string, error) {
 	skills, err := skillsrepo.Scan(root)
 	if err != nil {

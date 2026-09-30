@@ -12,7 +12,7 @@ import (
 	"github.com/sgash708/skillctl/internal/ui"
 )
 
-// parseRepo は"owner/name"形式のGitHubリポジトリ指定をownerとnameへ分割する。
+// parseRepo splits a GitHub repository spec in "owner/name" form into owner and name.
 func parseRepo(repo string) (owner, name string, err error) {
 	parts := strings.Split(repo, "/")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
@@ -28,11 +28,11 @@ type importResult struct {
 	Message string
 }
 
-// runImport は指定されたskillID群を、指定されたtargets("claude","codex")へimportする。
-// skillIDsは常に呼び出し側が確定させた明示的なskill名のリストであり、「空なら全skill」の
-// ような特別扱いはしない(空なら結果も単に空になる)。「全skill」を選ぶ手段は対話モードの
-// pickerだけであり、pickerがユーザーの選択結果を明示的なskill名リストとして返す。
-// 既存のClientをtargetごとに使い分けて実行する。
+// runImport imports the given skillIDs into the given targets ("claude", "codex").
+// skillIDs is always an explicit list of skill names decided by the caller, with no special
+// handling such as "empty means all skills" (an empty list simply yields an empty result). The only
+// way to select "all skills" is the interactive picker, which returns the user's choice as an
+// explicit list of skill names. Runs using the existing Client for each target.
 func runImport(ctx context.Context, clients map[string]*pluginclient.Client, marketplaceName string, skillIDs []string, targets []string) []importResult {
 	var results []importResult
 	for _, skill := range skillIDs {
@@ -53,8 +53,8 @@ func runImport(ctx context.Context, clients map[string]*pluginclient.Client, mar
 	return results
 }
 
-// availableClients はPATH上に存在する(`<name> --version`が終了コード0で成功する)
-// CLIのクライアントだけを返す。
+// availableClients returns only the clients whose CLI exists on PATH (`<name> --version`
+// succeeds with exit code 0).
 func availableClients(ctx context.Context, runner pluginclient.Runner) map[string]*pluginclient.Client {
 	clients := map[string]*pluginclient.Client{}
 	if res, err := runner.Run(ctx, "claude", "--version"); err == nil && res.ExitCode == 0 {
@@ -66,9 +66,9 @@ func availableClients(ctx context.Context, runner pluginclient.Runner) map[strin
 	return clients
 }
 
-// targetsFor はコマンドラインの --target 値(または対話モードで選ばれた値)を、
-// runImportへ渡すtargetsのスライスへ変換する。呼び出し側でvalidateTargetにより
-// 検証済みであることが前提(ここでは検証しない)。
+// targetsFor converts the command-line --target value (or the value chosen in interactive mode)
+// into the targets slice passed to runImport. It assumes the caller has already validated it via
+// validateTarget (no validation happens here).
 func targetsFor(target string) []string {
 	switch target {
 	case "claude":
@@ -80,10 +80,10 @@ func targetsFor(target string) []string {
 	}
 }
 
-// validateTarget は --target (または対話modeで選ばれたtarget)の値を検証する。
-// "claude"/"codex"/"both"以外は、どのclientにも一切触れる前にエラーとして
-// 弾く(例えばtypoで"cluade"のような値を渡した場合に、両方へ勝手にimportして
-// しまうことを防ぐ)。
+// validateTarget validates the --target value (or the target chosen in interactive mode).
+// Anything other than "claude"/"codex"/"both" is rejected as an error before any client is
+// touched (this prevents, for example, a typo like "cluade" from silently importing into
+// both).
 func validateTarget(target string) error {
 	switch target {
 	case "claude", "codex", "both":
@@ -93,7 +93,7 @@ func validateTarget(target string) error {
 	}
 }
 
-// filterClients はallClientsを、targetsに含まれるものだけへ絞り込む。
+// filterClients narrows allClients down to only those included in targets.
 func filterClients(allClients map[string]*pluginclient.Client, targets []string) map[string]*pluginclient.Client {
 	filtered := make(map[string]*pluginclient.Client, len(targets))
 	for _, target := range targets {
@@ -104,9 +104,9 @@ func filterClients(allClients map[string]*pluginclient.Client, targets []string)
 	return filtered
 }
 
-// ensureMarketplaces はclientsそれぞれについてEnsureMarketplaceを試み、失敗した
-// targetは戻り値の集合から除外する(そのtargetへのinstallは一切試みない)。
-// 失敗の理由はstderrへ表示する。
+// ensureMarketplaces tries EnsureMarketplace for each of the clients and excludes any target that
+// fails from the returned set (no install is attempted for that target).
+// The reason for a failure is printed to stderr.
 func ensureMarketplaces(ctx context.Context, clients map[string]*pluginclient.Client, marketplaceName, source string, stderr io.Writer) map[string]*pluginclient.Client {
 	active := make(map[string]*pluginclient.Client, len(clients))
 	for target, c := range clients {
@@ -129,11 +129,11 @@ func printResults(w io.Writer, results []importResult) {
 	}
 }
 
-// runImportCmd はimportコマンドの本体ロジック。runner/pickerを引数として受け取ることで、
-// 実CLI(exec)・実GitHub API・実端末に依存せずテストできるようにしている。
+// runImportCmd is the body logic of the import command. It takes the runner/picker as arguments so
+// that it can be tested without depending on the real CLI (exec), the real GitHub API, or a real terminal.
 //
-// repoは"owner/name"形式のskillリポジトリ。marketplaceNameが空ならリポジトリ名を、sourceが
-// 空なら`https://github.com/<repo>`を使う。
+// repo is a skill repository in "owner/name" form. If marketplaceName is empty the repository name is used; if source is
+// empty `https://github.com/<repo>` is used.
 func runImportCmd(ctx context.Context, runner pluginclient.Runner, picker ui.Picker, args []string, target string, yes bool, repo, marketplaceName, source string, stdout, stderr io.Writer) error {
 	repoOwner, repoName, err := parseRepo(repo)
 	if err != nil {
