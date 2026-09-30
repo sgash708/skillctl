@@ -46,7 +46,7 @@ func TestRunGenerate(t *testing.T) {
 		strict    bool                     // runGenerate(..., strict)
 		wantStale bool                     // expect stale files returned?
 		wantErr   bool                     // expect error?
-		skipRoot  bool                     // skip: os.Geteuid() == 0
+		skipRoot  bool                     // skip when permission errors cannot be provoked
 	}{
 		{
 			name: "write mode creates manifest files",
@@ -160,7 +160,7 @@ func TestRunGenerate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.skipRoot && os.Geteuid() == 0 {
+			if tt.skipRoot && cannotTestPermissions() {
 				t.Skip("skipping permission test as root")
 			}
 
@@ -217,7 +217,7 @@ func TestNewGenerateCmd(t *testing.T) {
 		wantErr      bool                     // expect Execute() to return error?
 		wantStale    bool                     // expect stale files in error?
 		assertStderr func(*testing.T, string) // optional: check stderr output
-		skipRoot     bool                     // skip: os.Geteuid() == 0
+		skipRoot     bool                     // skip when permission errors cannot be provoked
 	}{
 		{
 			name:      "write mode succeeds",
@@ -306,7 +306,7 @@ func TestNewGenerateCmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.skipRoot && os.Geteuid() == 0 {
+			if tt.skipRoot && cannotTestPermissions() {
 				t.Skip("skipping permission test as root")
 			}
 

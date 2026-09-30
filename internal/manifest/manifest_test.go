@@ -245,7 +245,7 @@ func TestWrite_OpenAIYAMLMarshalError(t *testing.T) {
 }
 
 func TestWrite_OpenAIYAMLMkdirAllError(t *testing.T) {
-	if os.Geteuid() == 0 {
+	if cannotTestPermissions() {
 		t.Skip("running as root, permission test not meaningful")
 	}
 	root := t.TempDir()
@@ -328,7 +328,7 @@ func TestCheck_OpenAIYAMLMissing(t *testing.T) {
 }
 
 func TestCheck_OpenAIYAMLUnreadableWhenNotWanted(t *testing.T) {
-	if os.Geteuid() == 0 {
+	if cannotTestPermissions() {
 		t.Skip("running as root, permission test not meaningful")
 	}
 	root := t.TempDir()
@@ -354,7 +354,7 @@ func TestCheck_OpenAIYAMLUnreadableWhenNotWanted(t *testing.T) {
 }
 
 func TestCheck_OpenAIYAMLUnreadableIsARealError(t *testing.T) {
-	if os.Geteuid() == 0 {
+	if cannotTestPermissions() {
 		t.Skip("running as root, permission test not meaningful")
 	}
 	root := t.TempDir()
@@ -492,7 +492,7 @@ func TestCheck_UnreadableFileIsARealErrorNotStale(t *testing.T) {
 	// Check must distinguish "file doesn't exist yet" (genuinely stale) from
 	// "file exists but can't be read" (a real I/O error; `generate` won't fix it,
 	// and reporting it as merely "stale" would be misleading).
-	if os.Geteuid() == 0 {
+	if cannotTestPermissions() {
 		t.Skip("running as root, permission test not meaningful")
 	}
 
@@ -612,7 +612,7 @@ func TestCheck_MismatchedContent(t *testing.T) {
 
 func TestWrite_PermissionErrors(t *testing.T) {
 	// Skip this test if running as root (permission bits don't restrict root)
-	if os.Geteuid() == 0 {
+	if cannotTestPermissions() {
 		t.Skip("running as root, permission test not meaningful")
 	}
 

@@ -220,6 +220,9 @@ func TestScan_RootNotExist(t *testing.T) {
 }
 
 func TestScan_ReadError(t *testing.T) {
+	if cannotTestPermissions() {
+		t.Skip("cannot provoke permission errors here")
+	}
 	root := t.TempDir()
 	skillDir := filepath.Join(root, "skill")
 	if err := os.MkdirAll(skillDir, 0o755); err != nil {
@@ -478,7 +481,7 @@ func TestCheckAllowedContents(t *testing.T) {
 		{
 			name: "errors if .claude-plugin cannot be read",
 			setup: func(t *testing.T, root string) {
-				if os.Geteuid() == 0 {
+				if cannotTestPermissions() {
 					t.Skip("running as root, permission test not meaningful")
 				}
 				dir := filepath.Join(root, "example-skill")
@@ -500,7 +503,7 @@ func TestCheckAllowedContents(t *testing.T) {
 		{
 			name: "errors if assets cannot be read",
 			setup: func(t *testing.T, root string) {
-				if os.Geteuid() == 0 {
+				if cannotTestPermissions() {
 					t.Skip("running as root, permission test not meaningful")
 				}
 				dir := filepath.Join(root, "example-skill")
