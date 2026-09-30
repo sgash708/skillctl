@@ -1,0 +1,8 @@
+coverage:
+  paths:
+    - coverage.out
+  acceptable: current >= 100%
+  exclude:
+    - "**/internal/ui/picker.go"
+    - "**/cmd/skillctl/main.go"
+    - "**/cmd/skillctl/import_cmd.go"

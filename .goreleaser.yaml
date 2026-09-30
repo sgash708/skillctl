@@ -1,0 +1,19 @@
+version: 2
+project_name: skillctl
+builds:
+  - main: ./cmd/skillctl
+    binary: skillctl
+    goos: [darwin, linux]
+    goarch: [amd64, arm64]
+    env:
+      - CGO_ENABLED=0
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}
+checksum:
+  name_template: "checksums.txt"
+release:
+  github:
+    owner: sgash708
+    name: skillctl
